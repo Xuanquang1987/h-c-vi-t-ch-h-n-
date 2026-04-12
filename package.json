@@ -1,0 +1,24 @@
+{
+  "name": "trang-tap-viet-tieng-trung",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare-hanzi": "node scripts/prepare-hanzi-data.mjs",
+    "build-definitions": "node scripts/build-definitions.mjs",
+    "postinstall": "node scripts/prepare-hanzi-data.mjs && node scripts/build-definitions.mjs",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^8.0.4"
+  },
+  "dependencies": {
+    "cc-cedict": "^1.1.1",
+    "hanviet-pinyin-words": "^2.1.7",
+    "hanzi-writer": "^3.7.3",
+    "hanzi-writer-data": "^2.0.1",
+    "opencc-js": "^1.0.5"
+  }
+}

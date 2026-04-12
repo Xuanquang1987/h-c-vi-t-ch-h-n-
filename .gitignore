@@ -1,0 +1,5 @@
+node_modules
+dist
+public/hanzi-data
+scripts/hanviet-words-db.json
+scripts/zhcn-vi-dic.dic
