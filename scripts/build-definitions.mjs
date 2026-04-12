@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 import * as OpenCC from "opencc-js";
 import { getAllHanvietsOfChar } from "hanviet-pinyin-words";
 import cedict from "cc-cedict";
+import { pinyin } from "pinyin-pro";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
@@ -122,23 +123,27 @@ function meaningFromCompound(entry) {
   return parts.length ? parts.slice(0, 8).join("; ") : entry.meaning;
 }
 
-/** Bính âm (CC-CEDICT, có số thanh); nhiều đọc thì nối bằng « / ». */
-function pinyinFromCedict(headword) {
-  if (!headword) return "";
-  let results;
-  try {
-    results = cedict.getBySimplified(headword, null, {
-      mergeCases: true,
-      asObject: true,
+/**
+ * Bính âm có dấu thanh (Hanyu Pinyin), từ chữ Hán — không dùng dạng số (xue2).
+ * Một chữ nhiều âm: nối bằng « / ».
+ */
+function pinyinMarkedFromZh(text) {
+  if (!text) return "";
+  const s = String(text).trim();
+  if (!s) return "";
+  if ([...s].length === 1) {
+    const arr = pinyin(s, {
+      toneType: "symbol",
+      type: "array",
+      multiple: true,
     });
-  } catch {
-    return "";
+    return Array.isArray(arr) && arr.length ? arr.join(" / ") : "";
   }
-  if (!results || typeof results !== "object") return "";
-  const keys = Object.keys(results)
-    .filter((k) => k && results[k]?.length)
-    .sort();
-  return keys.length ? keys.join(" / ") : "";
+  return pinyin(s, {
+    toneType: "symbol",
+    type: "string",
+    separator: " ",
+  });
 }
 
 /** Từ ghép (≥2 chữ), mọi chữ đều nằm trong bộ nét — giữ bản xếp hạng tốt nhất. */
@@ -159,8 +164,7 @@ function buildWordDefinitions(chars, db) {
   const wordOut = {};
   for (const [word, { entry: e }] of best) {
     const hv = (e.hanviet || "").trim() || "—";
-    const pyRaw = (e.pinyin || "").trim();
-    const py = pyRaw || pinyinFromCedict(word);
+    const py = pinyinMarkedFromZh(word) || (e.pinyin || "").trim();
     wordOut[word] = {
       chu: word,
       hanViet: hv,
@@ -191,7 +195,7 @@ function fillMissingWordPinyin(wordDefs) {
     const w = keys[i];
     const e = wordDefs[w];
     if (e.pinyin && String(e.pinyin).trim()) continue;
-    const py = pinyinFromCedict(w);
+    const py = pinyinMarkedFromZh(w);
     if (py) {
       e.pinyin = py;
       filled++;
@@ -213,7 +217,7 @@ function mergeDicCompoundEntries(wordDefs, dicCompoundMap, hvByChar) {
     }
     if (wordDefs[word]) continue;
     const nghia = rawMeaning.replace(/\s+/g, " ").trim();
-    const py = pinyinFromCedict(word);
+    const py = pinyinMarkedFromZh(word);
     wordDefs[word] = {
       chu: word,
       hanViet: hanVietLineForWord(word, hvByChar),
@@ -343,7 +347,7 @@ async function main() {
       hanViet,
       nghia,
       vidu,
-      pinyin: pinyinFromCedict(c),
+      pinyin: pinyinMarkedFromZh(c),
     };
   }
 

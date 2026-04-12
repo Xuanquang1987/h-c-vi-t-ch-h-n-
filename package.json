@@ -19,6 +19,7 @@
     "hanviet-pinyin-words": "^2.1.7",
     "hanzi-writer": "^3.7.3",
     "hanzi-writer-data": "^2.0.1",
-    "opencc-js": "^1.0.5"
+    "opencc-js": "^1.0.5",
+    "pinyin-pro": "^3.28.1"
   }
 }
