@@ -275,7 +275,7 @@ function bindUi() {
       renderDefinitionPanel(ch);
       await writer.setCharacter(ch);
       if (seq.length > 1) {
-        setStatus(`Mẫu ${i + 1}/${seq.length}: «${ch}»`);
+        setStatus(`Bắt đầu ${i + 1}/${seq.length}: «${ch}»`);
       } else {
         setStatus("");
       }
@@ -357,7 +357,7 @@ function renderShell() {
           <div id="writer-target"></div>
         </div>
         <div class="toolbar">
-          <button type="button" class="action primary" id="btn-demo">Mẫu nét</button>
+          <button type="button" class="action primary" id="btn-demo">BẮT ĐẦU</button>
           <button type="button" class="action primary" id="btn-quiz">Luyện viết</button>
         </div>
         <p id="status" class="status" aria-live="polite"></p>
