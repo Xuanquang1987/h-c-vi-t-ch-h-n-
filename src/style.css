@@ -234,6 +234,13 @@ button.primary:focus-visible {
   color: var(--text);
 }
 
+.def-pinyin {
+  font-size: 0.95em;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+  color: #1e3a5f;
+}
+
 .def-empty {
   margin: 0;
   font-size: 0.9rem;

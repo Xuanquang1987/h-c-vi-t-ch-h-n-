@@ -3,10 +3,26 @@ import HanziWriter from "hanzi-writer";
 
 const BASE = import.meta.env.BASE_URL;
 let allChars = [];
-/** @type {Record<string, { chu: string; hanViet: string; nghia: string; vidu: string }>} */
+/** @type {Record<string, { chu: string; hanViet: string; nghia: string; vidu: string; pinyin?: string }>} */
 let definitions = {};
+/** @type {Record<string, { chu: string; hanViet: string; nghia: string; vidu: string; pinyin?: string; source?: string }>} */
+let wordDefinitions = {};
 let writer = null;
 let currentChar = "学";
+
+/** Các chữ Hán (có dữ liệu nét) lấy từ ô nhập, theo thứ tự. */
+function parseDrawableSequence(raw) {
+  const out = [];
+  for (const g of String(raw).trim()) {
+    if (hasCharData(g)) out.push(g);
+  }
+  return out;
+}
+
+function getSequenceFromInput() {
+  const el = document.getElementById("char-input");
+  return parseDrawableSequence(el ? el.value : "");
+}
 
 function charDataLoader(char, onLoad, onError) {
   fetch(`${BASE}hanzi-data/${encodeURIComponent(char)}.json`)
@@ -117,21 +133,14 @@ function getStrictQuizOptions(onComplete) {
   };
 }
 
-async function loadCharacter(ch) {
-  const trimmed = [...ch.trim()][0];
-  if (!trimmed) {
-    setStatus("Nhập một chữ Hán.", "err");
-    return;
-  }
-  if (!hasCharData(trimmed)) {
-    renderDefinition(trimmed);
-    setStatus(
-      "Chữ này chưa có dữ liệu nét trong bộ đã tải. Chọn chữ khác trong danh sách.",
-      "err"
-    );
+async function loadCharacter(input) {
+  const seq = parseDrawableSequence(String(input ?? ""));
+  if (seq.length === 0) {
+    setStatus("Nhập ít nhất một chữ Hán có dữ liệu nét trong bộ.", "err");
     return;
   }
 
+  const trimmed = seq[0];
   currentChar = trimmed;
   const el = document.getElementById("writer-target");
 
@@ -152,11 +161,34 @@ async function loadCharacter(ch) {
     if (!writer) return;
   }
 
-  renderDefinition(trimmed);
+  renderDefinitionPanel(trimmed);
   setStatus("");
 }
 
-function renderDefinition(ch) {
+/**
+ * Một khối giải nghĩa gọn: ô 1 chữ → chữ đó; ô nhiều chữ và có mục cụm → cụm; không thì chữ đang xem.
+ */
+function renderDefinitionBlock(opts) {
+  const { head, hanViet, nghia, extra, extraLabel, pinyin } = opts;
+  const py = pinyin && String(pinyin).trim();
+  const pinyinRow = py
+    ? `<div class="def-block"><span class="def-k">Pinyin</span><p class="def-p def-pinyin">${escapeHtml(py)}</p></div>`
+    : "";
+  return `
+    <div class="def-one">
+      <div class="def-summary">
+        <span class="def-ch">${escapeHtml(head)}</span>
+        <span class="def-dot" aria-hidden="true">·</span>
+        <span class="def-v">${escapeHtml(hanViet)}</span>
+      </div>
+      ${pinyinRow}
+      <div class="def-block"><span class="def-k">Nghĩa</span><p class="def-p">${escapeHtml(nghia)}</p></div>
+      <div class="def-block"><span class="def-k">${escapeHtml(extraLabel)}</span><p class="def-p">${escapeHtml(extra)}</p></div>
+    </div>`;
+}
+
+function renderDefinitionPanel(detailChar) {
+  const ch = detailChar ?? currentChar;
   const root = document.getElementById("definition-panel");
   if (!root) return;
   if (!definitions || Object.keys(definitions).length === 0) {
@@ -164,21 +196,41 @@ function renderDefinition(ch) {
       '<p class="def-empty">Chưa tải được từ điển. Chạy <code>npm run build-definitions</code> rồi tải lại trang.</p>';
     return;
   }
+
+  const seq = getSequenceFromInput();
+  const compoundKey = seq.join("");
+  const wd =
+    seq.length >= 2 && wordDefinitions && wordDefinitions[compoundKey]
+      ? wordDefinitions[compoundKey]
+      : null;
+
+  if (wd) {
+    root.innerHTML = renderDefinitionBlock({
+      head: wd.chu,
+      hanViet: wd.hanViet,
+      nghia: wd.nghia,
+      extra: wd.vidu,
+      extraLabel: "Ghi chú",
+      pinyin: wd.pinyin,
+    });
+    return;
+  }
+
   const d = definitions[ch];
   if (!d) {
     root.innerHTML =
       '<p class="def-empty">Không có mục giải nghĩa cho chữ này trong bộ từ điển đã tải.</p>';
     return;
   }
-  root.innerHTML = `
-    <div class="def-summary">
-      <span class="def-ch">${escapeHtml(d.chu)}</span>
-      <span class="def-dot" aria-hidden="true">·</span>
-      <span class="def-v">${escapeHtml(d.hanViet)}</span>
-    </div>
-    <div class="def-block"><span class="def-k">Nghĩa</span><p class="def-p">${escapeHtml(d.nghia)}</p></div>
-    <div class="def-block"><span class="def-k">Ví dụ</span><p class="def-p">${escapeHtml(d.vidu)}</p></div>
-  `;
+
+  root.innerHTML = renderDefinitionBlock({
+    head: d.chu,
+    hanViet: d.hanViet,
+    nghia: d.nghia,
+    extra: d.vidu,
+    extraLabel: "Ví dụ",
+    pinyin: d.pinyin,
+  });
 }
 
 function escapeHtml(s) {
@@ -197,6 +249,11 @@ function bindUi() {
   input.addEventListener("focus", () => {
     renderSuggestions(input.value);
   });
+  input.addEventListener("blur", () => {
+    if (parseDrawableSequence(input.value).length > 0) {
+      loadCharacter(input.value);
+    }
+  });
 
   document.addEventListener("click", (e) => {
     if (!e.target.closest(".search-wrap")) {
@@ -206,26 +263,35 @@ function bindUi() {
 
   document.getElementById("btn-demo").addEventListener("click", async () => {
     if (!writer) return;
-    setStatus("");
+    const seq = getSequenceFromInput();
+    if (seq.length === 0) {
+      setStatus("Không có chữ nào trong ô có dữ liệu nét để xem mẫu.", "err");
+      return;
+    }
     writer.cancelQuiz();
-    await writer.setCharacter(currentChar);
-    await writer.animateCharacter();
+    for (let i = 0; i < seq.length; i++) {
+      const ch = seq[i];
+      currentChar = ch;
+      renderDefinitionPanel(ch);
+      await writer.setCharacter(ch);
+      if (seq.length > 1) {
+        setStatus(`Mẫu ${i + 1}/${seq.length}: «${ch}»`);
+      } else {
+        setStatus("");
+      }
+      await writer.animateCharacter();
+    }
+    setStatus("");
   });
 
-  document.getElementById("btn-quiz").addEventListener("click", async () => {
+  document.getElementById("btn-quiz").addEventListener("click", () => {
     if (!writer) return;
-    writer.cancelQuiz();
-    await writer.setCharacter(currentChar);
-    await writer.hideCharacter();
-    setStatus("");
-    await writer.quiz(
-      getStrictQuizOptions(({ totalMistakes }) => {
-        setStatus(
-          totalMistakes ? `Xong · sai ${totalMistakes} lần` : "Xong",
-          "ok"
-        );
-      })
-    );
+    const seq = getSequenceFromInput();
+    if (seq.length === 0) {
+      setStatus("Không có chữ nào trong ô có dữ liệu nét để luyện.", "err");
+      return;
+    }
+    runQuizChain(seq, 0);
   });
 
   window.addEventListener(
@@ -245,6 +311,43 @@ function debounce(fn, ms) {
   };
 }
 
+/** Luyện viết lần lượt từng chữ trong chuỗi; chuyển chữ khi onComplete của quiz trước. */
+function runQuizChain(seq, index) {
+  if (!writer || index >= seq.length) return;
+  const ch = seq[index];
+  currentChar = ch;
+  renderDefinitionPanel(ch);
+  writer.cancelQuiz();
+  writer.setCharacter(ch).then(() => writer.hideCharacter()).then(() => {
+    if (seq.length > 1) {
+      setStatus(`Luyện ${index + 1}/${seq.length}: «${ch}»`, "");
+    } else {
+      setStatus("");
+    }
+    writer.quiz(
+      getStrictQuizOptions(({ totalMistakes }) => {
+        if (index + 1 < seq.length) {
+          const part = totalMistakes
+            ? `«${ch}» xong · sai ${totalMistakes} lần`
+            : `«${ch}» xong`;
+          setStatus(part + " — sang chữ tiếp…", "ok");
+          runQuizChain(seq, index + 1);
+        } else if (seq.length === 1) {
+          setStatus(
+            totalMistakes ? `Xong · sai ${totalMistakes} lần` : "Xong",
+            "ok"
+          );
+        } else {
+          const part = totalMistakes
+            ? `«${ch}» xong · sai ${totalMistakes} lần`
+            : `«${ch}» xong`;
+          setStatus(part + " — hết chuỗi.", "ok");
+        }
+      })
+    );
+  });
+}
+
 function renderShell() {
   document.getElementById("app").innerHTML = `
     <div id="loading" class="loading">Đang tải danh sách chữ…</div>
@@ -262,7 +365,7 @@ function renderShell() {
       <section class="card card-search">
         <label for="char-input">Chọn chữ</label>
         <div class="search-wrap">
-          <input id="char-input" type="text" maxlength="8" autocomplete="off" placeholder="Gõ hoặc dán, ví dụ 学" inputmode="text" />
+          <input id="char-input" type="text" maxlength="48" autocomplete="off" placeholder="Một chữ hoặc cả từ/câu, ví dụ 学习" inputmode="text" />
           <div id="suggestions" class="suggestions" role="listbox"></div>
         </div>
       </section>
@@ -283,6 +386,10 @@ async function init() {
     const dr = await fetch(`${BASE}char-definitions.json`);
     if (dr.ok) {
       definitions = await dr.json();
+    }
+    const wr = await fetch(`${BASE}word-definitions.json`);
+    if (wr.ok) {
+      wordDefinitions = await wr.json();
     }
   } catch {
     document.getElementById("loading").innerHTML =
