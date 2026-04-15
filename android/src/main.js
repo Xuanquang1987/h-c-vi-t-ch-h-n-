@@ -177,19 +177,19 @@ function escapeHtml(s) {
     .replace(/"/g, "&quot;");
 }
 
-/** Mọi từ ghép (≥2 chữ) trong word-dict + khóa word-definitions có chứa anchorChar */
-function allCompoundStringsForAnchor(anchorChar) {
+/** Từ ghép (≥2 chữ) có anchorChar đứng đầu — word-dict + khóa word-definitions */
+function compoundsStartingWith(anchorChar) {
   const found = new Map();
   for (const x of wordDictWords) {
     if (!x.w || x.w.length < 2) continue;
-    if (!x.w.includes(anchorChar)) continue;
+    if (!x.w.startsWith(anchorChar)) continue;
     const rk = x.rk ?? 999999;
     const prev = found.get(x.w);
     if (prev === undefined || rk < prev) found.set(x.w, rk);
   }
   if (wordDefinitions && typeof wordDefinitions === "object") {
     for (const key of Object.keys(wordDefinitions)) {
-      if (key.length < 2 || !key.includes(anchorChar)) continue;
+      if (key.length < 2 || !key.startsWith(anchorChar)) continue;
       if (!found.has(key)) found.set(key, 888888);
     }
   }
@@ -198,18 +198,9 @@ function allCompoundStringsForAnchor(anchorChar) {
     .map(([w]) => w);
 }
 
-function renderWordAsPickButtons(word) {
-  const parts = [];
-  for (const g of word) {
-    if (hasCharData(g)) {
-      parts.push(
-        `<button type="button" class="def-pick-char" data-pick-char="${encodeURIComponent(g)}">${escapeHtml(g)}</button>`
-      );
-    } else {
-      parts.push(`<span class="def-char-nodata">${escapeHtml(g)}</span>`);
-    }
-  }
-  return `<span class="compound-chip">${parts.join("")}</span>`;
+/** Một từ ghép: bấm cả từ → đưa vào ô nhập & khung luyện (chữ đầu có nét). */
+function renderPickableWordChip(word) {
+  return `<button type="button" class="def-pick-word" data-pick-word="${encodeURIComponent(word)}">${escapeHtml(word)}</button>`;
 }
 
 /** Chuỗi gốc (vidu): tách theo / và cho phép bấm từng chữ có nét */
@@ -240,12 +231,10 @@ function spanifyPickableVidu(raw) {
  * Một khối "Ví dụ": danh sách từ ghép từ điển + (tuỳ chọn) chuỗi vidu gốc — nhãn thống nhất "Ví dụ".
  */
 function renderViduBlock(anchorChar, legacyVidu) {
-  const compounds = allCompoundStringsForAnchor(anchorChar);
+  const compounds = compoundsStartingWith(anchorChar);
   const chips =
     compounds.length > 0
-      ? compounds
-          .map((w) => renderWordAsPickButtons(w))
-          .join('<span class="compound-sep">，</span>')
+      ? compounds.map((w) => renderPickableWordChip(w)).join('<span class="compound-sep">，</span>')
       : "";
 
   const legacyHtml = legacyVidu && String(legacyVidu).trim() ? spanifyPickableVidu(legacyVidu) : "";
@@ -345,6 +334,26 @@ function bindUi() {
   });
 
   document.getElementById("main-ui").addEventListener("click", (e) => {
+    const wbtn = e.target.closest(".def-pick-word");
+    if (wbtn) {
+      e.preventDefault();
+      const raw = wbtn.getAttribute("data-pick-word");
+      if (!raw) return;
+      let word;
+      try {
+        word = decodeURIComponent(raw);
+      } catch {
+        return;
+      }
+      if (parseDrawableSequence(word).length === 0) {
+        setStatus("Từ này không có chữ nào có dữ liệu nét trong bộ.", "err");
+        return;
+      }
+      document.getElementById("char-input").value = word;
+      loadCharacter(word);
+      return;
+    }
+
     const btn = e.target.closest(".def-pick-char");
     if (!btn) return;
     e.preventDefault();

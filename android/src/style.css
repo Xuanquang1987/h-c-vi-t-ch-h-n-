@@ -254,7 +254,7 @@ button.primary:focus-visible {
   border-radius: 4px;
 }
 
-/* Ví dụ: từ ghép + bấm chọn chữ */
+/* Ví dụ: từ ghép (bấm cả từ) + vidu gốc (bấm từng chữ) */
 .def-vidu-body {
   line-height: 1.45;
 }
@@ -264,15 +264,32 @@ button.primary:focus-visible {
   word-break: break-word;
 }
 
-.compound-chip {
-  display: inline;
-  white-space: nowrap;
-}
-
 .compound-sep {
   color: var(--muted);
   font-weight: 500;
   margin: 0 2px;
+}
+
+button.def-pick-word {
+  display: inline;
+  margin: 0 2px 4px 0;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  background: #faf9f6;
+  font: inherit;
+  font-size: 0.95em;
+  color: var(--accent);
+  cursor: pointer;
+  border-radius: 6px;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+button.def-pick-word:hover,
+button.def-pick-word:focus-visible {
+  color: var(--accent-hover);
+  background: #eef4ff;
+  border-color: var(--accent);
 }
 
 button.def-pick-char {
