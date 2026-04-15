@@ -1,5 +1,3 @@
-node_modules
-dist
-public/hanzi-data
-scripts/hanviet-words-db.json
-scripts/zhcn-vi-dic.dic
+# Repo chỉ còn android — không còn pipeline Node ở root
+.DS_Store
+Thumbs.db
