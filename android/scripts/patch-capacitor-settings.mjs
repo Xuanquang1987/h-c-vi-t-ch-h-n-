@@ -1,6 +1,6 @@
 /**
  * `npx cap sync` ghi đè capacitor.settings.gradle trỏ về node_modules.
- * Repo dùng module Capacitor nhúng trong android/capacitor-android.
+ * Module Capacitor nhúng trong thư mục capacitor-android (cùng cấp app/).
  */
 import fs from "fs";
 import path from "path";
@@ -13,4 +13,4 @@ include ':capacitor-android'
 project(':capacitor-android').projectDir = new File('capacitor-android')
 `;
 fs.writeFileSync(gradle, content, "utf8");
-console.log("patched android/capacitor.settings.gradle → capacitor-android");
+console.log("patched capacitor.settings.gradle → capacitor-android");

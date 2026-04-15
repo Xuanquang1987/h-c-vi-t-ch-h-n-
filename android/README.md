@@ -1,24 +1,35 @@
 # Ứng dụng Android (Capacitor)
 
-Thư mục này là **toàn bộ project** — không còn mã Vite/npm ở cấp trên.
+**Toàn bộ chỉnh sửa nằm dưới thư mục `android/`** (repo). Cấu trúc chuẩn Capacitor:
 
-- `app/src/main/assets/public/` — bundle web (HTML/CSS/JS, `hanzi-data`, JSON từ điển).
-- `app/src/main/assets/capacitor.config.json` — cấu hình Capacitor.
-- `capacitor-android/` — mã nguồn module Gradle Capacitor (nhúng sẵn, **không** cần `node_modules` ở repo cha).
+| Thư mục / file | Nội dung |
+|----------------|----------|
+| `src/` | `main.js`, `style.css` — giao diện & logic (Vite) |
+| `package.json`, `vite.config.js`, `index.html` | Build bundle vào `dist/` |
+| **`android/android/`** | Project **Gradle** — mở **folder này** trong Android Studio |
+| `android/android/app/src/main/assets/public/` | Bundle + `hanzi-data`, JSON (sau `npm run android:sync`) |
 
-## Mở và đóng gói APK
+## Android Studio (đóng gói APK)
 
-1. Android Studio → **Open** → chọn thư mục **`android`** (folder chứa file này).
-2. **Build → Build Bundle(s) / APK(s) → Build APK(s)** (debug hoặc ký release).
+**File → Open** → chọn:
 
-## Cập nhật giao diện (mã nguồn ở thư mục gốc repo)
+`…/android/android`
 
-1. Sửa `src/main.js`, `src/style.css`, v.v. Dữ liệu tĩnh dùng chung: `app/src/main/assets/public/` (hanzi-data, JSON).
-2. Từ **thư mục gốc** (chứa `package.json`): `npm install` (lần đầu), rồi **`npm run android:sync`** (build web + đồng bộ Capacitor + vá lại `capacitor.settings.gradle` cho module nhúng).
-3. Mở lại project `android` trong Android Studio và build APK.
+(trùng tên `android` hai lần: một là app Capacitor, một là module native — bắt buộc theo Capacitor.)
 
-Trên máy **chỉ cần APK** có thể bỏ qua bước 2 nếu không đổi code.
+Sau đó **Build → Build APK(s)**.
+
+## Sau khi sửa `src/`
+
+Trong terminal, **cwd = thư mục `android`** (cấp có `package.json` và `src/`):
+
+```bash
+npm install
+npm run android:sync
+```
+
+Rồi build lại APK trong Android Studio.
 
 ## Ghi chú
 
-- WebView yếu có thể OOM với JSON rất lớn — bản đã đóng gói đã tối ưu (không parse hết từ điển cụm trên Android, v.v.).
+- WebView có thể OOM nếu JSON quá lớn — code đã hạn chế tải từ điển cụm nặng trên Android.
