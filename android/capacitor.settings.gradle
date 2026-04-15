@@ -1,3 +1,3 @@
-// Module Capacitor Android nhúng trong repo (không phụ thuộc node_modules ở thư mục cha).
+// Module Capacitor nhúng trong repo (cap sync có thể ghi đè — giữ đường dẫn local).
 include ':capacitor-android'
 project(':capacitor-android').projectDir = new File('capacitor-android')

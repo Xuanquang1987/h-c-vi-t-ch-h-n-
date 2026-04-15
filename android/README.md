@@ -11,9 +11,13 @@ Thư mục này là **toàn bộ project** — không còn mã Vite/npm ở cấ
 1. Android Studio → **Open** → chọn thư mục **`android`** (folder chứa file này).
 2. **Build → Build Bundle(s) / APK(s) → Build APK(s)** (debug hoặc ký release).
 
-## Khi cần cập nhật giao diện web
+## Cập nhật giao diện (mã nguồn ở thư mục gốc repo)
 
-Làm trong project web riêng (`npm run build`), rồi **chép** nội dung `dist/` vào `app/src/main/assets/public/` (ghi đè). Có thể **xoá** `word-definitions.json` trong `public/` sau khi chép — app Android không dùng file này (tránh APK ~+60MB).
+1. Sửa `src/main.js`, `src/style.css`, v.v. Dữ liệu tĩnh dùng chung: `app/src/main/assets/public/` (hanzi-data, JSON).
+2. Từ **thư mục gốc** (chứa `package.json`): `npm install` (lần đầu), rồi **`npm run android:sync`** (build web + đồng bộ Capacitor + vá lại `capacitor.settings.gradle` cho module nhúng).
+3. Mở lại project `android` trong Android Studio và build APK.
+
+Trên máy **chỉ cần APK** có thể bỏ qua bước 2 nếu không đổi code.
 
 ## Ghi chú
 

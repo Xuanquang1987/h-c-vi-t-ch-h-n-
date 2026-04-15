@@ -1,3 +1,6 @@
-# Luyện viết chữ Hán (Android)
+# Luyện viết chữ Hán
 
-Toàn bộ mã và hướng dẫn build nằm trong thư mục **`android/`** — xem **`android/README.md`**.
+- **`src/`** — giao diện web (Vite): `main.js`, `style.css`.
+- **`android/`** — project Android Studio & dữ liệu tĩnh trong `app/src/main/assets/public/`.
+
+Build APK: **`android/README.md`**. Đồng bộ sau khi sửa web: ở thư mục gốc chạy `npm run build && npx cap sync android`.
