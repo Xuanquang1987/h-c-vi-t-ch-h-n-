@@ -13,7 +13,7 @@ Thư mục này là **toàn bộ project** — không còn mã Vite/npm ở cấ
 
 ## Khi cần cập nhật giao diện web
 
-Làm trong project web riêng (`npm run build`), rồi **chép toàn bộ** nội dung thư mục `dist/` vào `app/src/main/assets/public/` (ghi đè). Giữ `app/src/main/assets/capacitor.config.json` trừ khi đổi `appId` / `webDir`.
+Làm trong project web riêng (`npm run build`), rồi **chép** nội dung `dist/` vào `app/src/main/assets/public/` (ghi đè). Có thể **xoá** `word-definitions.json` trong `public/` sau khi chép — app Android không dùng file này (tránh APK ~+60MB).
 
 ## Ghi chú
 
