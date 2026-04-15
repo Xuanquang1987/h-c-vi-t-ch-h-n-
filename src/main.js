@@ -1,4 +1,5 @@
 import "./style.css";
+import { Capacitor } from "@capacitor/core";
 import HanziWriter from "hanzi-writer";
 
 const BASE = import.meta.env.BASE_URL;
@@ -387,9 +388,15 @@ async function init() {
     if (dr.ok) {
       definitions = await dr.json();
     }
-    const wr = await fetch(`${BASE}word-definitions.json`);
-    if (wr.ok) {
-      wordDefinitions = await wr.json();
+    // Trên Android (WebView), parse toàn bộ word-definitions.json (~60MB+) dễ OOM → crash.
+    // Trình duyệt desktop vẫn tải đủ cụm từ.
+    if (!Capacitor.isNativePlatform()) {
+      const wr = await fetch(`${BASE}word-definitions.json`);
+      if (wr.ok) {
+        wordDefinitions = await wr.json();
+      }
+    } else {
+      wordDefinitions = {};
     }
   } catch {
     document.getElementById("loading").innerHTML =

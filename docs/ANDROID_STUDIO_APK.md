@@ -47,6 +47,10 @@ Trên Windows, đôi khi IDE không thấy PATH của user:
 - Cài Node bản **User** hoặc thêm Node vào **PATH hệ thống**, khởi động lại Android Studio.
 - Hoặc trong **Settings → Build, Execution, Deployment → Gradle → Environment** thêm biến `PATH` bổ sung đường dẫn tới thư mục chứa `node.exe`.
 
+## Ứng dụng bị crash khi mở
+
+Nguyên nhân thường gặp: file **`word-definitions.json`** rất lớn (~hàng chục MB); parse hết trong WebView có thể **hết RAM**. App đã được chỉnh để **không** tải file này trên Android; giải nghĩa **cụm từ** có thể hạn chế, còn **từng chữ** vẫn đầy đủ. Sau khi cập nhật mã, hãy **Build → Build APK(s)** lại (Gradle sẽ sync web).
+
 ## Ghi chú
 
 - Thư mục `android/app/src/main/assets/public` và một số file Capacitor **không** commit (`.gitignore`); chúng được tạo lại khi sync/build.
