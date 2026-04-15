@@ -49,7 +49,12 @@ Trên Windows, đôi khi IDE không thấy PATH của user:
 
 ## Ứng dụng bị crash khi mở
 
-Nguyên nhân thường gặp: file **`word-definitions.json`** rất lớn (~hàng chục MB); parse hết trong WebView có thể **hết RAM**. App đã được chỉnh để **không** tải file này trên Android; giải nghĩa **cụm từ** có thể hạn chế, còn **từng chữ** vẫn đầy đủ. Sau khi cập nhật mã, hãy **Build → Build APK(s)** lại (Gradle sẽ sync web).
+Nguyên nhân thường gặp: **WebView hết RAM (OOM)** — log có thể ghi `Renderer process ... kill (OOM)`, `aw_browser_terminator`.
+
+1. **`word-definitions.json`** rất lớn (~hàng chục MB): app **không** parse file này trên Android.
+2. **`char-definitions.json`** (~vài MB) + **Hanzi Writer** (canvas) cùng lúc cũng có thể gây OOM: trên Android, từ điển chữ được **tải sau** khi khung vẽ đã khởi tạo (giảm đỉnh bộ nhớ).
+
+Sau khi cập nhật mã, **Build → Build APK(s)** lại. Trên máy ảo, có thể tăng **RAM** (AVD → Edit) nếu vẫn chật.
 
 ## Ghi chú
 

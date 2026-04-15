@@ -8,6 +8,8 @@ let allChars = [];
 let definitions = {};
 /** @type {Record<string, { chu: string; hanViet: string; nghia: string; vidu: string; pinyin?: string; source?: string }>} */
 let wordDefinitions = {};
+/** Trên Android: từ điển tải sau khung vẽ để tránh OOM WebView (parse JSON + canvas cùng lúc). */
+let definitionsLoading = false;
 let writer = null;
 let currentChar = "学";
 
@@ -193,6 +195,10 @@ function renderDefinitionPanel(detailChar) {
   const root = document.getElementById("definition-panel");
   if (!root) return;
   if (!definitions || Object.keys(definitions).length === 0) {
+    if (Capacitor.isNativePlatform() && definitionsLoading) {
+      root.innerHTML = '<p class="def-empty">Đang tải từ điển…</p>';
+      return;
+    }
     root.innerHTML =
       '<p class="def-empty">Chưa tải được từ điển. Chạy <code>npm run build-definitions</code> rồi tải lại trang.</p>';
     return;
@@ -380,23 +386,25 @@ function renderShell() {
 
 async function init() {
   renderShell();
+  const isNative = Capacitor.isNativePlatform();
   try {
     const res = await fetch(`${BASE}hanzi-data/chars.json`);
     if (!res.ok) throw new Error("chars.json missing");
     allChars = await res.json();
-    const dr = await fetch(`${BASE}char-definitions.json`);
-    if (dr.ok) {
-      definitions = await dr.json();
-    }
-    // Trên Android (WebView), parse toàn bộ word-definitions.json (~60MB+) dễ OOM → crash.
-    // Trình duyệt desktop vẫn tải đủ cụm từ.
-    if (!Capacitor.isNativePlatform()) {
+
+    if (isNative) {
+      definitionsLoading = true;
+      definitions = {};
+      wordDefinitions = {};
+    } else {
+      const dr = await fetch(`${BASE}char-definitions.json`);
+      if (dr.ok) {
+        definitions = await dr.json();
+      }
       const wr = await fetch(`${BASE}word-definitions.json`);
       if (wr.ok) {
         wordDefinitions = await wr.json();
       }
-    } else {
-      wordDefinitions = {};
     }
   } catch {
     document.getElementById("loading").innerHTML =
@@ -410,6 +418,18 @@ async function init() {
   bindUi();
   document.getElementById("char-input").value = currentChar;
   await loadCharacter(currentChar);
+
+  if (isNative) {
+    try {
+      const dr = await fetch(`${BASE}char-definitions.json`);
+      if (dr.ok) {
+        definitions = await dr.json();
+      }
+    } finally {
+      definitionsLoading = false;
+    }
+    renderDefinitionPanel(currentChar);
+  }
 }
 
 init();
