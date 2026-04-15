@@ -1,0 +1,2 @@
+// Project gốc chỉ gom build con qua includeBuild("android") trong settings.gradle.
+// Không thêm plugin ở đây — app nằm trong thư mục con android/.

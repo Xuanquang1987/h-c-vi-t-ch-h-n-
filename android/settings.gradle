@@ -1,0 +1,21 @@
+// Mở thư mục này trong Android Studio (cấp có package.json).
+// Module ứng dụng nằm trong thư mục con "android" (Gradle chuẩn Capacitor).
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "luyen-viet-capacitor-root"
+
+includeBuild("android")

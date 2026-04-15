@@ -11,13 +11,14 @@
 
 ## Android Studio (đóng gói APK)
 
-**File → Open** → chọn:
+**File → Open** → chọn **một trong hai** (đều được):
 
-`…/android/android`
-
-(trùng tên `android` hai lần: một là app Capacitor, một là module native — bắt buộc theo Capacitor.)
+1. Thư mục **`android`** (cấp có `package.json` và `src/`) — đã có `settings.gradle` + Gradle Wrapper để IDE nhận project.
+2. Hoặc thư mục **`android/android`** (project Gradle gốc của Capacitor).
 
 Sau đó **Build → Build APK(s)**.
+
+Nếu trước đây bạn mở nhầm **thư mục gốc repo** (không có `settings.gradle`), Gradle sẽ báo lỗi dạng *BuildLayoutValidator* — hãy **Close Project** và **Open** lại đúng **`android`** như trên.
 
 ## Sau khi sửa `src/`
 
