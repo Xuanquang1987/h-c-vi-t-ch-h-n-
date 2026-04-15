@@ -1,0 +1,41 @@
+// Tự động: npm (cài nếu thiếu) → vite build → cap sync → đổ web vào assets/public.
+// Bỏ qua: -PskipWebSync hoặc biến môi trường SKIP_CAPACITOR_WEB_SYNC=true (khi đã sync tay).
+
+def repoRoot = rootProject.projectDir.parentFile.canonicalFile
+
+def shouldSkipWebSync() {
+    return project.hasProperty('skipWebSync') ||
+            'true'.equalsIgnoreCase(System.getenv('SKIP_CAPACITOR_WEB_SYNC') ?: '')
+}
+
+tasks.register('syncWebApp', Exec) {
+    group 'capacitor'
+    description 'Cài npm nếu cần, build Vite, cap sync (đưa dist vào android assets)'
+    onlyIf { !shouldSkipWebSync() }
+    workingDir repoRoot
+
+    def os = System.getProperty('os.name', '').toLowerCase()
+    if (os.contains('windows')) {
+        commandLine 'cmd', '/c', 'if not exist node_modules npm install && npm run build && npx cap sync android'
+    } else {
+        commandLine 'sh', '-c', '([ -d node_modules ] || npm install) && npm run build && npx cap sync android'
+    }
+}
+
+tasks.register('verifyCapacitorWebAssets') {
+    group 'capacitor'
+    description 'Kiểm tra đã có bundle web (index.html trong assets/public)'
+    dependsOn tasks.named('syncWebApp')
+    doLast {
+        def index = file("${projectDir}/src/main/assets/public/index.html")
+        if (!index.isFile()) {
+            throw new GradleException(
+                    "Thiếu web bundle Capacitor: ${index}.\n" +
+                    "Từ thư mục gốc dự án chạy: npm install && npm run build && npx cap sync android\n" +
+                    "Hoặc bỏ -PskipWebSync / SKIP_CAPACITOR_WEB_SYNC để Gradle tự chạy sync."
+            )
+        }
+    }
+}
+
+tasks.named('preBuild').configure { dependsOn('verifyCapacitorWebAssets') }

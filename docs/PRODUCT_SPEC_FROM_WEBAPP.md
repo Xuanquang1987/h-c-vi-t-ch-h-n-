@@ -128,6 +128,8 @@ Tài liệu này **bám sát** mã nguồn web (`src/main.js`, `src/style.css`, 
 2. **Tải JSON:** `AssetManager` / `fileProvider` thay cho `fetch`.
 3. **Định nghĩa:** logic trong `DefinitionResolver` (đã port sang Kotlin trong thư mục `native-kotlin-core/`) giữ nguyên quy tắc mục 4.7.
 
+**Ứng dụng Android (Capacitor):** mở thư mục `android` trong Android Studio; Gradle tự **build web + cap sync** trước mỗi lần đóng gói — xem **`docs/ANDROID_STUDIO_APK.md`** (cần Node.js trong PATH).
+
 ---
 
 ## 8. Tham chiếu mã
